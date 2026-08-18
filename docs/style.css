@@ -43,7 +43,9 @@ body {
     color: white;
     padding: 90px 0 80px;
 }
-
+.dark-green-code {
+    color: #006400;
+}
 .eyebrow,
 .section-label {
     font-size: 0.76rem;
