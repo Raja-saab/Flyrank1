@@ -246,7 +246,7 @@ The main generated output is the **ranked refresh-review queue**, containing:
 
 ---
 
-# 9. Acknowledgments & Data Credit:
+# 10. Acknowledgments & Data Credit:
 
 > **Built on the FlyRank ML Internship dataset.**
 
