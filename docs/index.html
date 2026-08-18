@@ -1,1 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Refresh / Content Opportunity Scoring — Research Paper</title>
+
+    <meta
+        name="description"
+        content="A research study evaluating machine-learning ranking against a transparent rule-based baseline for content refresh review."
+    >
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="hero">
+    <div class="container">
+
+        <div class="eyebrow">
+            FLYRANK ML INTERNSHIP · RESEARCH PAPER
+        </div>
+
+        <h1>
+            Refresh / Content Opportunity Scoring
+        </h1>
+
+        <p class="subtitle">
+            Can machine learning improve the prioritization of content pages
+            for refresh review?
+        </p>
+
+        <div class="author">
+            <strong>Raja Ahsan Aftab</strong>
+            <span>·</span>
+            <span>August 2026</span>
+        </div>
+
+        <div class="hero-tags">
+            <span>Content Refresh</span>
+            <span>Ranking</span>
+            <span>Machine Learning</span>
+            <span>Decision Support</span>
+        </div>
+
+    </div>
+</header>
+
+
+<main class="container">
+
+    <!-- ABSTRACT -->
+
+    <section class="paper-section abstract">
+
+        <div class="section-label">
+            ABSTRACT
+        </div>
+
+        <h2>Abstract</h2>
+
+        <p>
+            This study asks whether a machine-learning model can improve upon
+            a transparent rule-based baseline when ranking content pages for
+            refresh review using only information available at decision time.
+            The analysis uses monthly aggregated content-performance data from
+            the FlyRank ML Internship dataset, with search visibility, clicks,
+            impressions, position, CTR, and recent change signals used as
+            decision-time information.
+            A rule-based baseline was compared with a logistic-regression model
+            using the same evaluation rows and metrics, with a future-month click
+            decline of at least 20% defining the refresh-opportunity label for
+            pages with at least 10 current-month clicks.
+            On the held-out evaluation set, the rule-based baseline achieved
+            ROC-AUC 0.5779 and average precision 0.7241, while logistic
+            regression achieved ROC-AUC 0.4891 and average precision 0.6558.
+            The resulting ranked queue is therefore best treated as
+            decision-support for human refresh review, with the transparent
+            baseline providing the stronger measured ranking signal in this
+            experiment.
+        </p>
+
+    </section>
+
+
+    <!-- KEY RESULT -->
+
+    <section class="result-card">
+
+        <div>
+            <div class="section-label">HEADLINE RESULT</div>
+
+            <h2>
+                The transparent baseline outperformed logistic regression.
+            </h2>
+
+            <p>
+                Both methods were evaluated on the same held-out observations.
+                The result is a measured comparison, not a claim that machine
+                learning cannot improve refresh prioritization in general.
+            </p>
+        </div>
+
+        <div class="metric-grid">
+
+            <div class="metric">
+                <span>Baseline ROC-AUC</span>
+                <strong>0.5779</strong>
+            </div>
+
+            <div class="metric">
+                <span>ML ROC-AUC</span>
+                <strong>0.4891</strong>
+            </div>
+
+            <div class="metric">
+                <span>Baseline AP</span>
+                <strong>0.7241</strong>
+            </div>
+
+            <div class="metric">
+                <span>ML AP</span>
+                <strong>0.6558</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PROBLEM -->
+
+    <section class="paper-section">
+
+        <div class="section-label">01 · PROBLEM</div>
+
+        <h2>Problem Framing</h2>
+
+        <p>
+            The decision supported by this work is which content pages should
+            receive human review for a possible refresh.
+        </p>
+
+        <p>
+            The unit of analysis is a content page for a client in a particular
+            month. Each eligible page receives a score and rank, together with
+            a reason code and recommended action.
+        </p>
+
+        <p>
+            The human action is not an automatic content rewrite. Instead,
+            an editor can use the ranked queue to decide which pages are worth
+            investigating first.
+        </p>
+
+        <h3>Cost of a Wrong Call</h3>
+
+        <div class="two-column">
+
+            <div class="info-card">
+                <h4>Missed opportunity</h4>
+                <p>
+                    A weak page may be missed and continue to lose search
+                    visibility or clicks.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h4>Unnecessary review</h4>
+                <p>
+                    A healthy page may receive unnecessary editorial attention,
+                    wasting limited review capacity.
+                </p>
+            </div>
+
+        </div>
+
+        <p>
+            A ranking system is useful because the dataset contains many
+            content-page observations, making it difficult to manually inspect
+            every page with equal priority. The goal is therefore to provide
+            a repeatable and transparent way to prioritize review rather than
+            to automate editorial judgment.
+        </p>
+
+    </section>
+
+
+    <!-- DATA -->
+
+    <section class="paper-section">
+
+        <div class="section-label">02 · DATA</div>
+
+        <h2>Data Safety</h2>
+
+        <p>
+            The analysis uses the FlyRank ML Internship warehouse release and
+            the daily content-performance data aggregated to a monthly
+            content-page level.
+        </p>
+
+        <div class="stat-grid">
+
+            <div class="stat">
+                <strong>78.8M</strong>
+                <span>Daily warehouse rows</span>
+            </div>
+
+            <div class="stat">
+                <strong>2.87M</strong>
+                <span>Monthly content rows</span>
+            </div>
+
+            <div class="stat">
+                <strong>19,823</strong>
+                <span>Final evaluation rows</span>
+            </div>
+
+            <div class="stat">
+                <strong>66.1%</strong>
+                <span>Positive-label rate</span>
+            </div>
+
+        </div>
+
+        <h3>Information Used</h3>
+
+        <ul class="feature-list">
+            <li>Monthly Google Search clicks</li>
+            <li>Monthly Google Search impressions</li>
+            <li>Average search position</li>
+            <li>CTR</li>
+            <li>Google Analytics sessions</li>
+            <li>Engaged sessions</li>
+            <li>Previous-month clicks</li>
+            <li>Previous-month impressions</li>
+            <li>Previous-month position</li>
+            <li>Recent click-change information</li>
+        </ul>
+
+        <h3>Leakage Controls</h3>
+
+        <p>
+            Future clicks, future-month information, and future click-change
+            percentage were used only for label construction and evaluation,
+            not as decision-time model features.
+        </p>
+
+        <p>
+            Pseudonymous client and content identifiers were retained for
+            grouping and output identification but were not used as predictive
+            model features.
+        </p>
+
+        <div class="notice">
+            <strong>Public-safety note:</strong>
+            No client names, domains, private search queries, credentials,
+            or other client-identifying information are included in the
+            public analysis.
+        </div>
+
+    </section>
+
+
+    <!-- METHODOLOGY -->
+
+    <section class="paper-section">
+
+        <div class="section-label">03 · METHODOLOGY</div>
+
+        <h2>Methodology</h2>
+
+        <h3>Baseline</h3>
+
+        <p>
+            The first system was a transparent rule-based baseline designed
+            to prioritize pages that showed potentially useful refresh signals.
+        </p>
+
+        <p>
+            The baseline combines observable search-performance conditions
+            into a simple score and assigns reason codes such as
+            <code>HIGH_SEARCH_VISIBILITY</code> and
+            <code>WEAK_SEARCH_POSITION</code>.
+        </p>
+
+        <div class="action">
+            <span>Output action</span>
+            <strong>REFRESH_REVIEW</strong>
+        </div>
+
+        <h3>Machine-Learning Model</h3>
+
+        <p>
+            The machine-learning model was logistic regression. Logistic
+            regression was selected because the goal was not only to produce
+            a score but also to establish a simple, interpretable machine-
+            learning comparison against the transparent rule.
+        </p>
+
+        <h3>Target Definition</h3>
+
+        <blockquote>
+            A page is a refresh opportunity when it has at least 10
+            current-month clicks and its next month's clicks decline by
+            at least 20%.
+        </blockquote>
+
+        <p>
+            The future-month outcome was used only to construct the target.
+            The model did not use future clicks or future-month information
+            as input features.
+        </p>
+
+    </section>
+
+
+    <!-- EVALUATION -->
+
+    <section class="paper-section">
+
+        <div class="section-label">04 · EVALUATION</div>
+
+        <h2>Evaluation</h2>
+
+        <p>
+            The evaluation was performed on a held-out test set so that the
+            baseline and machine-learning model could be compared on the same
+            observations.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Measure</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>Evaluation rows</td>
+                    <td>19,823</td>
+                </tr>
+
+                <tr>
+                    <td>Positive labels</td>
+                    <td>13,100</td>
+                </tr>
+
+                <tr>
+                    <td>Negative labels</td>
+                    <td>6,723</td>
+                </tr>
+
+                <tr>
+                    <td>Positive rate</td>
+                    <td>≈ 66.1%</td>
+                </tr>
+
+                <tr>
+                    <td>Majority-class baseline</td>
+                    <td>≈ 66.1%</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Model vs Baseline</h3>
+
+        <table class="results-table">
+
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>ROC-AUC</th>
+                    <th>Average Precision</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr class="winner">
+                    <td>Rule-based baseline</td>
+                    <td>0.5779</td>
+                    <td>0.7241</td>
+                </tr>
+
+                <tr>
+                    <td>Logistic regression</td>
+                    <td>0.4891</td>
+                    <td>0.6558</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+        <p>
+            The rule-based baseline therefore performed better than logistic
+            regression on both reported metrics.
+        </p>
+
+        <p>
+            This is an important negative result: adding a simple machine-
+            learning model did not automatically improve the ranking system.
+        </p>
+
+        <p>
+            The baseline's ROC-AUC above 0.50 indicates some directional
+            discrimination, while the logistic-regression ROC-AUC below 0.50
+            indicates that its learned ranking was not useful on this held-out
+            evaluation in its current form.
+        </p>
+
+        <p>
+            The positive-label rate is relatively high, so average precision
+            should be interpreted alongside the base rate rather than in
+            isolation.
+        </p>
+
+    </section>
+
+
+    <!-- INTERPRETATION -->
+
+    <section class="paper-section">
+
+        <div class="section-label">05 · INTERPRETATION</div>
+
+        <h2>Interpretation</h2>
+
+        <p>
+            The strongest result from the experiment is that the transparent
+            baseline was more useful than the logistic-regression model for
+            this particular ranking task and feature setup.
+        </p>
+
+        <p>
+            The baseline's strongest ranked pages were generally pages with
+            substantial search visibility and measurable search activity.
+            For example, the top-ranked queue included pages with hundreds
+            of clicks and thousands of impressions, allowing the refresh-review
+            process to focus on pages that already have meaningful search
+            exposure.
+        </p>
+
+        <p>
+            The reason codes make the output easier to interpret. A page can
+            be prioritized because it has high search visibility or because
+            its observed search position suggests a possible improvement
+            opportunity.
+        </p>
+
+        <p>
+            The machine-learning result was a useful negative finding.
+            Logistic regression did not improve upon the hand-designed
+            baseline, suggesting that the current feature representation
+            and linear model were not sufficient to capture a stronger
+            ranking signal.
+        </p>
+
+        <div class="important">
+            <strong>Important framing:</strong>
+            This does not demonstrate that machine learning is ineffective
+            for refresh prioritization in general. It only shows that this
+            particular model and feature setup did not outperform the
+            transparent baseline under the evaluation used here.
+        </div>
+
+    </section>
+
+
+    <!-- RECOMMENDATIONS -->
+
+    <section class="paper-section">
+
+        <div class="section-label">06 · RECOMMENDATIONS</div>
+
+        <h2>Ranked Recommendations</h2>
+
+        <div class="recommendation">
+
+            <div class="rank">01</div>
+
+            <div>
+                <h3>Prioritize High-Visibility Pages for Review</h3>
+
+                <p>
+                    Pages with substantial search impressions and clicks can
+                    be valuable candidates for human review because improvements
+                    may affect content that already receives meaningful search
+                    exposure.
+                </p>
+
+                <span class="confidence">Confidence: Moderate</span>
+            </div>
+
+        </div>
+
+
+        <div class="recommendation">
+
+            <div class="rank">02</div>
+
+            <div>
+                <h3>Review Pages with Weak Search-Position Signals</h3>
+
+                <p>
+                    Pages showing weaker search positioning can be investigated
+                    for content-quality, intent-match, freshness, or
+                    SERP-alignment opportunities.
+                </p>
+
+                <span class="confidence">Confidence: Directional</span>
+            </div>
+
+        </div>
+
+
+        <div class="recommendation">
+
+            <div class="rank">03</div>
+
+            <div>
+                <h3>Keep Reason Codes Visible to Editors</h3>
+
+                <p>
+                    The queue should show the reason behind each recommendation
+                    rather than presenting an unexplained score.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="recommendation">
+
+            <div class="rank">04</div>
+
+            <div>
+                <h3>Do Not Automatically Refresh Every Ranked Page</h3>
+
+                <p>
+                    The ranked output should be treated as decision-support,
+                    not an automatic content-change instruction. Human review
+                    remains necessary.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="recommendation">
+
+            <div class="rank">05</div>
+
+            <div>
+                <h3>Keep the Transparent Baseline as the Benchmark</h3>
+
+                <p>
+                    Any future model should be required to beat the baseline
+                    on the same held-out data and metrics before being
+                    considered an improvement.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ARTIFACTS -->
+
+    <section class="paper-section">
+
+        <div class="section-label">07 · ARTIFACTS</div>
+
+        <h2>Research Artifacts</h2>
+
+        <p>
+            The deployed paper can include the charts generated from the
+            capstone analysis. These visual artifacts should make the
+            comparison and ranked output easier to inspect.
+        </p>
+
+        <div class="figure-grid">
+
+            <figure>
+                <img src="figures/model_vs_baseline.png"
+                     alt="Model versus rule-based baseline comparison">
+                <figcaption>
+                    Figure 1. Model versus transparent baseline.
+                </figcaption>
+            </figure>
+
+            <figure>
+                <img src="figures/label_distribution.png"
+                     alt="Refresh opportunity label distribution">
+                <figcaption>
+                    Figure 2. Refresh-opportunity label distribution.
+                </figcaption>
+            </figure>
+
+            <figure class="wide">
+                <img src="figures/ranked_queue.png"
+                     alt="Top ranked refresh-review queue">
+                <figcaption>
+                    Figure 3. Example ranked refresh-review queue.
+                </figcaption>
+            </figure>
+
+        </div>
+
+    </section>
+
+
+    <!-- REPRODUCIBILITY -->
+
+    <section class="paper-section">
+
+        <div class="section-label">08 · REPRODUCIBILITY</div>
+
+        <h2>Reproducibility</h2>
+
+        <p>
+            The analysis was developed in the repository's
+            <code>work/</code> notebooks.
+        </p>
+
+        <p>
+            The main capstone notebook is:
+        </p>
+
+        <pre><code>work/notebooks/capstone.ipynb</code></pre>
+
+        <p>
+            The supporting ML notebooks include the weekly signal-audit and
+            baseline-scoring work under:
+        </p>
+
+        <pre><code>work/notebooks/</code></pre>
+
+        <h3>Tools and Environment</h3>
+
+        <ul class="feature-list">
+            <li>Python</li>
+            <li>pandas</li>
+            <li>DuckDB</li>
+            <li>NumPy</li>
+            <li>scikit-learn</li>
+        </ul>
+
+        <p>
+            The warehouse was queried with DuckDB using the Hugging Face
+            dataset release.
+        </p>
+
+        <p>
+            The analysis was designed so that monthly aggregation, target
+            construction, baseline scoring, model evaluation, and ranked
+            queue generation can be rerun from the notebooks.
+        </p>
+
+        <h3>Main Output</h3>
+
+        <p>
+            The main generated output is the ranked refresh-review queue,
+            containing page-level decision-time features, model/baseline
+            score, rank, reason code, and action.
+        </p>
+
+    </section>
+
+
+    <!-- ACKNOWLEDGMENTS -->
+
+    <section class="paper-section acknowledgement">
+
+        <div class="section-label">09 · DATA CREDIT</div>
+
+        <h2>Acknowledgments &amp; Data Credit</h2>
+
+        <p>
+            <strong>Built on the FlyRank ML Internship dataset.</strong>
+        </p>
+
+        <p>
+            Data credit:
+            <a href="https://flyrank.ai" target="_blank" rel="noopener">
+                FlyRank
+            </a>
+        </p>
+
+    </section>
+
+
+</main>
+
+
+<footer>
+
+    <div class="container footer-content">
+
+        <div>
+            <strong>Refresh / Content Opportunity Scoring</strong>
+            <p>
+                A decision-support research artifact by Raja Ahsan Aftab.
+            </p>
+        </div>
+
+        <div class="footer-links">
+
+            <a
+                href="https://github.com/Raja-saab/Flyrank1"
+                target="_blank"
+                rel="noopener"
+            >
+                GitHub Repository
+            </a>
+
+        </div>
+
+    </div>
+
+</footer>
+
+</body>
+</html>
